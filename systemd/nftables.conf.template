@@ -1,0 +1,60 @@
+#!/usr/bin/nft -f
+# nftables configuration for Debug Pi
+# NAT and routing for AP and USB tethering
+
+flush ruleset
+
+table inet debug_pi {
+    chain input {
+        type filter hook input priority 0; policy drop;
+        
+        # Allow established and related
+        ct state established,related accept
+        
+        # Allow loopback
+        iifname "lo" accept
+        
+        # Allow ICMP
+        ip protocol icmp accept
+        ip6 nexthdr icmpv6 accept
+        
+        # Allow SSH
+        tcp dport 22 accept
+        
+        # Allow HTTP on AP interface
+        iifname "wlan0" tcp dport 3000 accept
+        
+        # Allow DHCP on AP and USB
+        iifname { "wlan0", "usb0" } udp dport 67 accept
+        
+        # Allow DNS on AP
+        iifname "wlan0" udp dport 53 accept
+    }
+    
+    chain forward {
+        type filter hook forward priority 0; policy drop;
+        
+        # Allow established and related
+        ct state established,related accept
+        
+        # Allow forwarding from AP to WAN
+        iifname "wlan0" oifname "eth0" accept
+        
+        # Allow forwarding from USB to AP
+        iifname "usb0" oifname "wlan0" accept
+    }
+    
+    chain output {
+        type filter hook output priority 0; policy accept;
+    }
+    
+    chain postrouting {
+        type nat hook postrouting priority 100; policy accept;
+        
+        # NAT for AP clients
+        iifname "wlan0" oifname "eth0" masquerade
+        
+        # NAT for USB clients
+        iifname "usb0" oifname "wlan0" masquerade
+    }
+}

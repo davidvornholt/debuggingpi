@@ -1,0 +1,11 @@
+# dnsmasq configuration for Debug Pi
+# This is a template that will be populated by the daemon
+
+interface=wlan0
+dhcp-range={{DHCP_RANGE_START}},{{DHCP_RANGE_END}},{{NETMASK}},{{LEASE_DURATION}}
+dhcp-option=3,{{GATEWAY}}
+dhcp-option=6,{{DNS_SERVER}}
+bind-interfaces
+no-hosts
+domain-needed
+bogus-priv

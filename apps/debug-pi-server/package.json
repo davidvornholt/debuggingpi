@@ -1,0 +1,25 @@
+{
+  "name": "@debug-pi/server",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "bun build src/main.ts --outdir dist --target node --format esm",
+    "dev": "bun run --hot src/main.ts",
+    "start": "bun run dist/main.js",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check src"
+  },
+  "dependencies": {
+    "@debug-pi/shared": "workspace:*",
+    "@effect/platform": "^0.75.8",
+    "@effect/platform-node": "^0.72.8",
+    "@effect/schema": "^0.82.0",
+    "effect": "^3.12.5",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/bun": "^1.2.0",
+    "typescript": "^5.7.2"
+  }
+}

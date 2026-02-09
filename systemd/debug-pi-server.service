@@ -1,0 +1,17 @@
+[Unit]
+Description=Debug Pi Web Server
+After=network.target debug-pi-daemon.service
+Requires=debug-pi-daemon.service
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/opt/debug-pi/server
+ExecStart=/usr/local/bin/bun run /opt/debug-pi/server/dist/main.js
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

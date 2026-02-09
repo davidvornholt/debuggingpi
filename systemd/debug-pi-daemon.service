@@ -1,0 +1,17 @@
+[Unit]
+Description=Debug Pi Privileged Daemon
+After=network.target
+Before=debug-pi-server.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/debug-pi/daemon
+ExecStart=/usr/local/bin/bun run /opt/debug-pi/daemon/dist/main.js
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
