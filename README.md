@@ -22,7 +22,7 @@ Debug Pi is built as a monorepo with three main applications:
 
 ## Technology Stack
 
-- **Runtime**: Bun (with fallback to Node.js)
+- **Runtime**: Bun (preferred) or Node.js (fallback)
 - **Languages**: TypeScript
 - **Framework**: Effect TS for server-side logic
 - **UI**: React with Vite
@@ -48,6 +48,8 @@ npm run build
 npm run lint
 npm run typecheck
 ```
+
+**Note**: While the project is designed for Bun, all build and development scripts work with Node.js/npm for maximum compatibility.
 
 ### Building a Raspberry Pi Image
 
