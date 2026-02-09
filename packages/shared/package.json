@@ -1,0 +1,21 @@
+{
+  "name": "@debuggingpi/shared",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    "./config-schema": "./src/config-schema.ts",
+    "./types": "./src/types.ts"
+  },
+  "scripts": {
+    "lint": "biome check .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "effect": "^3.11.7",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.1.13",
+    "typescript": "^5.7.2"
+  }
+}
