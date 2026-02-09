@@ -1,0 +1,79 @@
+#!/usr/sbin/nft -f
+# nftables configuration template
+# This file is generated from user configuration
+
+flush ruleset
+
+table inet filter {
+  chain input {
+    type filter hook input priority 0; policy drop;
+
+    # Allow established/related connections
+    ct state established,related accept
+
+    # Allow loopback
+    iif lo accept
+
+    # Allow ICMP
+    ip protocol icmp accept
+    ip6 nexthdr icmpv6 accept
+
+    # Allow SSH
+    tcp dport 22 accept
+
+    # Allow DNS and DHCP on AP interface
+    iifname "wlan0" udp dport { 53, 67 } accept
+    iifname "wlan0" tcp dport 53 accept
+
+    # Allow HTTP on AP interface (for web UI)
+    iifname "wlan0" tcp dport { 80, 3000, 5173 } accept
+
+    # Allow USB tether interface
+    iifname "usb0" accept
+
+    # Log and drop everything else
+    log prefix "INPUT DROP: " drop
+  }
+
+  chain forward {
+    type filter hook forward priority 0; policy drop;
+
+    # Allow established/related connections
+    ct state established,related accept
+
+    # Allow forwarding from AP to internet
+    iifname "wlan0" oifname "eth0" accept
+    iifname "eth0" oifname "wlan0" ct state related,established accept
+
+    # Allow forwarding from USB tether to internet
+    iifname "usb0" oifname "eth0" accept
+    iifname "eth0" oifname "usb0" ct state related,established accept
+
+    # Allow forwarding between USB and AP
+    iifname "usb0" oifname "wlan0" accept
+    iifname "wlan0" oifname "usb0" accept
+
+    # Log and drop everything else
+    log prefix "FORWARD DROP: " drop
+  }
+
+  chain output {
+    type filter hook output priority 0; policy accept;
+  }
+}
+
+table inet nat {
+  chain prerouting {
+    type nat hook prerouting priority -100; policy accept;
+  }
+
+  chain postrouting {
+    type nat hook postrouting priority 100; policy accept;
+
+    # NAT for AP clients
+    iifname "wlan0" oifname "eth0" masquerade
+
+    # NAT for USB tethered devices
+    iifname "usb0" oifname "eth0" masquerade
+  }
+}

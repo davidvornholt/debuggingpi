@@ -1,0 +1,18 @@
+[Unit]
+Description=Configure USB Tethering on %i
+After=network.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+
+# Configure USB interface
+ExecStart=/usr/sbin/ip addr add {{DEVICE_ADDRESS}}/24 dev %i
+ExecStart=/usr/sbin/ip link set %i up
+
+# Cleanup on stop
+ExecStop=/usr/sbin/ip addr flush dev %i
+ExecStop=/usr/sbin/ip link set %i down
+
+[Install]
+WantedBy=multi-user.target

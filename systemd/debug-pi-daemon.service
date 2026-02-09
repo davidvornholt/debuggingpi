@@ -1,0 +1,29 @@
+[Unit]
+Description=Debug Pi Daemon (Privileged Networking)
+Documentation=https://github.com/davidvornholt/debuggingpi
+After=network.target
+Before=debug-pi-server.service
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/opt/debug-pi/daemon
+Environment="NODE_ENV=production"
+ExecStart=/usr/local/bin/bun run /opt/debug-pi/daemon/main.js
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=debug-pi-daemon
+
+# Create Unix socket directory
+RuntimeDirectory=debug-pi
+RuntimeDirectoryMode=0755
+
+# Security settings (relaxed for network operations)
+NoNewPrivileges=false
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

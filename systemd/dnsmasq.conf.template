@@ -1,0 +1,24 @@
+# dnsmasq configuration template
+# This file is generated from user configuration
+
+# Interface to listen on
+interface=wlan0
+bind-interfaces
+
+# DHCP server settings
+dhcp-range={{DHCP_RANGE_START}},{{DHCP_RANGE_END}},{{SUBNET_MASK}},24h
+dhcp-option=option:router,{{SUBNET}}
+dhcp-option=option:dns-server,{{SUBNET}}
+
+# DNS settings
+no-resolv
+server=8.8.8.8
+server=8.8.4.4
+
+# Logging
+log-queries
+log-dhcp
+
+# Additional settings
+domain=debug-pi.local
+local=/debug-pi.local/

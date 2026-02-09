@@ -1,0 +1,32 @@
+# hostapd configuration template
+# This file is generated from user configuration
+interface=wlan0
+driver=nl80211
+
+# SSID and passphrase - configured at build time or via UI
+ssid={{SSID}}
+wpa_passphrase={{PASSPHRASE}}
+
+# Wi-Fi settings
+hw_mode=g
+channel={{CHANNEL}}
+ieee80211n=1
+wmm_enabled=1
+
+# Regulatory domain
+country_code={{REGULATORY_DOMAIN}}
+
+# WPA2 security
+auth_algs=1
+wpa=2
+wpa_key_mgmt=WPA-PSK
+rsn_pairwise=CCMP
+
+# Logging
+logger_syslog=-1
+logger_syslog_level=2
+logger_stdout=-1
+logger_stdout_level=2
+
+# Additional settings
+ignore_broadcast_ssid=0

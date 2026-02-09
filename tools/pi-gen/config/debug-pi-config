@@ -1,0 +1,34 @@
+#!/bin/bash
+# Pi-Gen configuration for Debug Pi
+# This script is sourced by pi-gen
+
+# Base configuration
+IMG_NAME="DebugPi"
+RELEASE="bookworm"
+DEPLOY_ZIP=1
+
+# Hostname
+TARGET_HOSTNAME="debug-pi"
+
+# Locale and timezone
+TIMEZONE_DEFAULT="UTC"
+KEYBOARD_KEYMAP="us"
+KEYBOARD_LAYOUT="English (US)"
+
+# User configuration (will be prompted)
+FIRST_USER_NAME="pi"
+# FIRST_USER_PASS will be prompted
+
+# Enable SSH by default
+ENABLE_SSH=1
+
+# Stage selection
+STAGE_LIST="stage0 stage1 stage2"
+
+# Disable unnecessary stages
+SKIP_STAGE3=1
+SKIP_STAGE4=1
+SKIP_STAGE5=1
+
+# Custom stage for Debug Pi installation
+CUSTOM_STAGE="99-debug-pi"

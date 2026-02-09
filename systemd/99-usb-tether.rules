@@ -1,0 +1,5 @@
+# udev rule for USB gadget detection
+# Automatically configure USB tethering when usb0 appears
+
+# Detect USB gadget interface
+SUBSYSTEM=="net", ACTION=="add", KERNEL=="usb0", TAG+="systemd", ENV{SYSTEMD_WANTS}="debug-pi-usb-tether@%k.service"
