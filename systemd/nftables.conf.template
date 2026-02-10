@@ -1,0 +1,18 @@
+table ip nat {
+  chain prerouting {
+    type nat hook prerouting priority 0; policy accept;
+  }
+
+  chain postrouting {
+    type nat hook postrouting priority 100; policy accept;
+    oifname "usb0" masquerade
+  }
+}
+
+table ip filter {
+  chain forward {
+    type filter hook forward priority 0; policy drop;
+    iifname "wlan0" oifname "usb0" accept
+    iifname "usb0" oifname "wlan0" accept
+  }
+}

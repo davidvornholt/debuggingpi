@@ -1,0 +1,10 @@
+interface=wlan0
+bind-interfaces
+server=1.1.1.1
+domain-needed
+bogus-priv
+expand-hosts
+no-resolv
+no-hosts
+
+dhcp-range={{DHCP_START}},{{DHCP_END}},12h

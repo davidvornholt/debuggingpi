@@ -1,0 +1,15 @@
+{
+  "name": "@debug-pi/daemon",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "bun build src/main.ts --outdir dist",
+    "lint": "biome check src",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@debug-pi/shared": "workspace:*",
+    "effect": "^3.5.0",
+    "zod": "^3.23.8"
+  }
+}

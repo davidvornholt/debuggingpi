@@ -1,0 +1,15 @@
+[Unit]
+Description=Debugging Pi Network Daemon
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/debug-pi/apps/debug-pi-daemon
+ExecStart=/usr/bin/bun /opt/debug-pi/apps/debug-pi-daemon/dist/main.js
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

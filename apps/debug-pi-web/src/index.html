@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Debugging Pi</title>
+    <link rel="stylesheet" href="/styles.css" />
+</head>
+
+<body>
+    <div class="ambient"></div>
+    <div class="page">
+        <header class="hero">
+            <div>
+                <p class="eyebrow">Headless Debug Hub</p>
+                <h1>Debugging Pi</h1>
+                <p class="subhead">
+                    Bring up the access point, tether USB, and watch logs live without opening a shell.
+                </p>
+            </div>
+            <div class="status-pill">
+                <span class="dot" id="status-dot"></span>
+                <span id="status-text">Connecting...</span>
+            </div>
+        </header>
+
+        <main class="grid">
+            <section class="card">
+                <h2>Status</h2>
+                <div class="status-grid">
+                    <div>
+                        <p class="label">AP</p>
+                        <p class="value" id="ap-state">Unknown</p>
+                    </div>
+                    <div>
+                        <p class="label">USB</p>
+                        <p class="value" id="usb-state">Unknown</p>
+                    </div>
+                    <div>
+                        <p class="label">Last Update</p>
+                        <p class="value" id="status-updated">--</p>
+                    </div>
+                </div>
+                <div class="actions">
+                    <button id="reboot" class="ghost">Reboot</button>
+                    <button id="shutdown" class="ghost">Shutdown</button>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>Access Point</h2>
+                <form id="config-form" class="form">
+                    <label>
+                        SSID
+                        <input id="ap-ssid" required />
+                    </label>
+                    <label>
+                        Passphrase
+                        <input id="ap-passphrase" type="password" required minlength="8" />
+                    </label>
+                    <label>
+                        Country
+                        <input id="ap-country" required maxlength="2" />
+                    </label>
+                    <label>
+                        Subnet
+                        <input id="ap-subnet" required />
+                    </label>
+                    <div class="row">
+                        <label>
+                            DHCP Start
+                            <input id="ap-dhcp-start" required />
+                        </label>
+                        <label>
+                            DHCP End
+                            <input id="ap-dhcp-end" required />
+                        </label>
+                    </div>
+                    <label class="toggle">
+                        <input id="usb-enabled" type="checkbox" />
+                        USB Tether Enabled
+                    </label>
+                    <label>
+                        USB Address
+                        <input id="usb-address" required />
+                    </label>
+                    <button type="submit" class="primary">Save Config</button>
+                    <p class="hint" id="config-status">Waiting for updates...</p>
+                </form>
+            </section>
+
+            <section class="card logs">
+                <div class="logs-header">
+                    <h2>Live Logs</h2>
+                    <button id="clear-logs" class="ghost">Clear</button>
+                </div>
+                <pre id="log-output">Connecting to journal...</pre>
+            </section>
+        </main>
+    </div>
+
+    <script type="module" src="/index.js"></script>
+</body>
+
+</html>

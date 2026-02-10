@@ -1,0 +1,14 @@
+{
+  "name": "@debug-pi/web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "bun build src/index.ts --outdir dist --target=browser && cp src/index.html dist/index.html && cp src/styles.css dist/styles.css",
+    "lint": "biome check src",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@debug-pi/shared": "workspace:*",
+    "zod": "^3.23.8"
+  }
+}

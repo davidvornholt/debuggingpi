@@ -1,0 +1,17 @@
+[Unit]
+Description=Debugging Pi Web Server
+After=network-online.target
+Wants=network-online.target
+Requires=debug-pi-daemon.service
+
+[Service]
+Type=simple
+User=debug-pi
+WorkingDirectory=/opt/debug-pi/apps/debug-pi-server
+ExecStart=/usr/bin/bun /opt/debug-pi/apps/debug-pi-server/dist/main.js
+Restart=on-failure
+RestartSec=2
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target

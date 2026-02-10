@@ -1,0 +1,5 @@
+IMG_NAME=debug-pi
+HOSTNAME=debug-pi
+ENABLE_SSH=1
+STAGE_LIST="stage0 stage1 stage2"
+DISABLE_FIRST_BOOT_USER_RENAME=1
