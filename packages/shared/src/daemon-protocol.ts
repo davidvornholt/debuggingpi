@@ -6,7 +6,7 @@ const StatusSchema = z
   .object({
     ap: z.object({ running: z.boolean() }).strict(),
     usb: z.object({ active: z.boolean() }).strict(),
-    updatedAt: z.string().min(1),
+    updatedAt: z.string().datetime(),
   })
   .strict();
 

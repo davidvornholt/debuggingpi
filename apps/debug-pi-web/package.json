@@ -3,9 +3,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "bun build src/index.ts --outdir dist --target=browser && cp src/index.html dist/index.html && cp src/styles.css dist/styles.css",
+    "build": "bun build src/index.ts --outdir dist --target=browser && shx cp src/index.html dist/index.html && shx cp src/styles.css dist/styles.css",
     "lint": "biome check src",
     "typecheck": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "shx": "^0.3.4"
   },
   "dependencies": {
     "@debug-pi/shared": "workspace:*",

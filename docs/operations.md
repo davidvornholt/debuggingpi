@@ -13,7 +13,7 @@ Update the AP and USB settings in the UI. Changes are persisted to `/etc/debug-p
 ## USB tethering expectations
 
 - The Pi will bridge Wi-Fi to the USB interface when `usb0` appears.
-- Ensure the target device uses the same USB gadget mode and assigns itself a DHCP client.
+- Ensure the target device uses the same USB gadget mode and is configured as a DHCP client.
 
 ## Logs
 
@@ -24,7 +24,7 @@ The web UI streams journald logs via Server-Sent Events. If logs stop, verify:
 
 ## SSH access
 
-- Install your SSH public key in `/home/pi/.ssh/authorized_keys`.
+- Install your SSH public key in `~/.ssh/authorized_keys`.
 - Verify permissions: `chmod 700 ~/.ssh` and `chmod 600 ~/.ssh/authorized_keys`.
 
 ## Troubleshooting

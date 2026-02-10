@@ -5,11 +5,23 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=root
+User=debug-pi
 WorkingDirectory=/opt/debug-pi/apps/debug-pi-daemon
 ExecStart=/usr/bin/bun /opt/debug-pi/apps/debug-pi-daemon/dist/main.js
 Restart=on-failure
 RestartSec=2
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_BIND_SERVICE CAP_NET_RAW
+AmbientCapabilities=CAP_NET_ADMIN CAP_NET_BIND_SERVICE CAP_NET_RAW
+LimitNOFILE=65536
+LimitNPROC=512
+MemoryMax=200M
 
 [Install]
 WantedBy=multi-user.target

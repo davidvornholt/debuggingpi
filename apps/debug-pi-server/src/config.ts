@@ -5,7 +5,8 @@ import { Effect } from "effect";
 import { ConfigSchema, defaultConfig } from "@debug-pi/shared";
 import type { Config, ConfigUpdate } from "@debug-pi/shared";
 
-export const configPath = "/etc/debug-pi/config.json";
+export const getConfigPath = (): string =>
+  process.env.DEBUG_PI_CONFIG_PATH ?? "/etc/debug-pi/config.json";
 
 type ConfigError = {
   readonly _tag: "ConfigError";
@@ -43,6 +44,12 @@ const renameFile = (from: string, to: string): Effect.Effect<void, ConfigError> 
     catch: (error) => configError(`Failed to rename ${from}: ${String(error)}`),
   });
 
+const removeFile = (path: string): Effect.Effect<void, ConfigError> =>
+  Effect.tryPromise({
+    try: () => fs.rm(path, { force: true }),
+    catch: (error) => configError(`Failed to remove ${path}: ${String(error)}`),
+  });
+
 const ensureDir = (path: string): Effect.Effect<void, ConfigError> =>
   Effect.tryPromise({
     try: () => fs.mkdir(path, { recursive: true }),
@@ -56,35 +63,98 @@ const parseConfig = (raw: string): Effect.Effect<Config, ConfigError> =>
   });
 
 const mergeConfig = (current: Config, update: ConfigUpdate): Config => {
-  const apUpdate = update.ap ?? {};
-  const usbUpdate = update.usb ?? {};
-
   return {
     ...current,
     ap: {
-      ...current.ap,
-      ...apUpdate,
+      ssid: update.ap?.ssid ?? current.ap.ssid,
+      passphrase: update.ap?.passphrase ?? current.ap.passphrase,
+      country: update.ap?.country ?? current.ap.country,
+      subnet: update.ap?.subnet ?? current.ap.subnet,
+      dhcpRange: {
+        start: update.ap?.dhcpRange?.start ?? current.ap.dhcpRange.start,
+        end: update.ap?.dhcpRange?.end ?? current.ap.dhcpRange.end,
+      },
     },
     usb: {
-      ...current.usb,
-      ...usbUpdate,
+      enabled: update.usb?.enabled ?? current.usb.enabled,
+      address: update.usb?.address ?? current.usb.address,
     },
   };
 };
 
-export const loadConfig = (): Effect.Effect<Config, ConfigError> =>
-  readFile(configPath).pipe(
-    Effect.catchAll((error) =>
-      isErrnoException(error.error) && error.error.code === "ENOENT"
-        ? Effect.succeed(JSON.stringify(defaultConfig))
-        : Effect.fail(configError(`Failed to read ${configPath}: ${String(error.error)}`)),
-    ),
-    Effect.flatMap(parseConfig),
+const envString = (value: string | undefined, fallback: string): string => {
+  if (typeof value === "string" && value.length > 0) {
+    return value;
+  }
+  return fallback;
+};
+
+const envBoolean = (value: string | undefined, fallback: boolean): boolean =>
+  value !== undefined ? value === "true" : fallback;
+
+const defaultConfigFromEnv = (): Config => {
+  const ssid: string = envString(process.env.DEBUG_PI_SSID, defaultConfig.ap.ssid);
+  const passphrase: string = envString(
+    process.env.DEBUG_PI_PASSPHRASE,
+    defaultConfig.ap.passphrase,
+  );
+  const country: string = envString(process.env.DEBUG_PI_COUNTRY, defaultConfig.ap.country);
+  const subnet: string = envString(process.env.DEBUG_PI_SUBNET, defaultConfig.ap.subnet);
+  const dhcpStart: string = envString(
+    process.env.DEBUG_PI_DHCP_START,
+    defaultConfig.ap.dhcpRange.start,
+  );
+  const dhcpEnd: string = envString(process.env.DEBUG_PI_DHCP_END, defaultConfig.ap.dhcpRange.end);
+  const usbEnabled: boolean = envBoolean(
+    process.env.DEBUG_PI_USB_ENABLED,
+    defaultConfig.usb.enabled,
+  );
+  const usbAddress: string = envString(
+    process.env.DEBUG_PI_USB_ADDRESS,
+    defaultConfig.usb.address,
   );
 
+  const candidate: Record<string, unknown> = {
+    ap: {
+      ssid,
+      passphrase,
+      country,
+      subnet,
+      dhcpRange: {
+        start: dhcpStart,
+        end: dhcpEnd,
+      },
+    },
+    usb: {
+      enabled: usbEnabled,
+      address: usbAddress,
+    },
+  };
+
+  const parsed = ConfigSchema.safeParse(candidate);
+  return parsed.success ? parsed.data : defaultConfig;
+};
+
+export const loadConfig = (): Effect.Effect<Config, ConfigError> => {
+  const configPath = getConfigPath();
+
+  return readFile(configPath).pipe(
+    Effect.catchAll((error) =>
+      isErrnoException(error.error) && error.error.code === "ENOENT"
+        ? Effect.succeed(defaultConfigFromEnv())
+        : Effect.fail(configError(`Failed to read ${configPath}: ${String(error.error)}`)),
+    ),
+    Effect.flatMap((raw) => (typeof raw === "string" ? parseConfig(raw) : Effect.succeed(raw))),
+  );
+};
+
+const uniqueTempPath = (path: string): string =>
+  `${path}.${process.pid}.${Date.now()}.${Math.random().toString(16).slice(2)}.tmp`;
+
 export const saveConfig = (config: Config): Effect.Effect<Config, ConfigError> => {
+  const configPath = getConfigPath();
   const dir = dirname(configPath);
-  const tempPath = `${configPath}.tmp`;
+  const tempPath = uniqueTempPath(configPath);
   const payload = `${JSON.stringify(config, null, 2)}\n`;
 
   return Effect.gen(function* () {
@@ -93,7 +163,14 @@ export const saveConfig = (config: Config): Effect.Effect<Config, ConfigError> =
     yield* renameFile(tempPath, configPath);
 
     return config;
-  });
+  }).pipe(
+    Effect.catchAll((error) =>
+      removeFile(tempPath).pipe(
+        Effect.catchAll(() => Effect.succeed(undefined)),
+        Effect.flatMap(() => Effect.fail(error)),
+      ),
+    ),
+  );
 };
 
 export const applyConfigUpdate = (update: ConfigUpdate): Effect.Effect<Config, ConfigError> =>

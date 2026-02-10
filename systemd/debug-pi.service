@@ -1,8 +1,10 @@
 [Unit]
 Description=Debugging Pi Web Server
-After=network-online.target
+After=network-online.target debug-pi-daemon.service
 Wants=network-online.target
 Requires=debug-pi-daemon.service
+StartLimitIntervalSec=60
+StartLimitBurst=5
 
 [Service]
 Type=simple
@@ -12,6 +14,14 @@ ExecStart=/usr/bin/bun /opt/debug-pi/apps/debug-pi-server/dist/main.js
 Restart=on-failure
 RestartSec=2
 Environment=NODE_ENV=production
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=full
+ProtectHome=yes
+ProtectHostname=true
+PrivateDevices=yes
+CapabilityBoundingSet=~CAP_SYS_ADMIN
+ReadWritePaths=/etc/debug-pi
 
 [Install]
 WantedBy=multi-user.target

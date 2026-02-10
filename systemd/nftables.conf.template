@@ -12,7 +12,7 @@ table ip nat {
 table ip filter {
   chain forward {
     type filter hook forward priority 0; policy drop;
-    iifname "wlan0" oifname "usb0" accept
-    iifname "usb0" oifname "wlan0" accept
+    iifname "usb0" oifname "wlan0" ct state new,established accept
+    iifname "wlan0" oifname "usb0" ct state established,related accept
   }
 }

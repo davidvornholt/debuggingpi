@@ -2,8 +2,16 @@
   "name": "@debug-pi/shared",
   "private": true,
   "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "scripts": {
-    "build": "bun build src/index.ts --outdir dist",
+    "build": "tsc -p tsconfig.json --emitDeclarationOnly && bun build src/index.ts --outdir dist",
     "lint": "biome check src",
     "typecheck": "tsc -p tsconfig.json"
   },

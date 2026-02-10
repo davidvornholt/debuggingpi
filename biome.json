@@ -16,5 +16,8 @@
     "formatter": {
       "quoteStyle": "double"
     }
+  },
+  "organizeImports": {
+    "enabled": true
   }
 }

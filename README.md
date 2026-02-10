@@ -26,10 +26,12 @@ bun run --cwd apps/debug-pi-server build
 bun run --cwd apps/debug-pi-web build
 
 sudo /usr/bin/bun apps/debug-pi-daemon/dist/main.js
-bun apps/debug-pi-server/dist/main.js
+/usr/bin/bun apps/debug-pi-server/dist/main.js
 ```
 
-The UI will be available at `http://localhost:3000`.
+`debug-pi-web` builds static assets that are served by `debug-pi-server`, so only
+`debug-pi-daemon` and `debug-pi-server` need to run. The UI will be available at
+`http://localhost:3000`.
 
 ## Docs
 

@@ -1,10 +1,10 @@
-interface=wlan0
+interface={{DNSMASQ_INTERFACE}}
 bind-interfaces
-server=1.1.1.1
+server={{DNS_SERVER}}
 domain-needed
 bogus-priv
-expand-hosts
 no-resolv
 no-hosts
 
-dhcp-range={{DHCP_START}},{{DHCP_END}},12h
+dhcp-range={{DHCP_START}},{{DHCP_END}},{{DHCP_NETMASK}},12h
+dhcp-option=3,{{GATEWAY_IP}}

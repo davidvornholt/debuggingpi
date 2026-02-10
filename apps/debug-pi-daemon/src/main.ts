@@ -1,3 +1,4 @@
+import { spawn } from "node:child_process";
 import { promises as fs } from "node:fs";
 import { createServer } from "node:net";
 import { dirname } from "node:path";
@@ -32,6 +33,30 @@ type DaemonIoError = {
 const isErrnoException = (error: unknown): error is NodeJS.ErrnoException =>
   typeof error === "object" && error !== null && "code" in error;
 
+const defaultConfigFromEnv = (): Config => ({
+  ...defaultConfig,
+  ap: {
+    ...defaultConfig.ap,
+    ssid: process.env.DEBUG_PI_SSID ?? defaultConfig.ap.ssid,
+    passphrase: process.env.DEBUG_PI_PASSPHRASE ?? defaultConfig.ap.passphrase,
+    country: process.env.DEBUG_PI_COUNTRY ?? defaultConfig.ap.country,
+    subnet: process.env.DEBUG_PI_SUBNET ?? defaultConfig.ap.subnet,
+    dhcpRange: {
+      ...defaultConfig.ap.dhcpRange,
+      start: process.env.DEBUG_PI_DHCP_START ?? defaultConfig.ap.dhcpRange.start,
+      end: process.env.DEBUG_PI_DHCP_END ?? defaultConfig.ap.dhcpRange.end,
+    },
+  },
+  usb: {
+    ...defaultConfig.usb,
+    enabled:
+      process.env.DEBUG_PI_USB_ENABLED !== undefined
+        ? process.env.DEBUG_PI_USB_ENABLED === "true"
+        : defaultConfig.usb.enabled,
+    address: process.env.DEBUG_PI_USB_ADDRESS ?? defaultConfig.usb.address,
+  },
+});
+
 const readConfig = (): Effect.Effect<Config, DaemonError> =>
   Effect.tryPromise({
     try: () => fs.readFile(configPath, "utf-8"),
@@ -39,14 +64,16 @@ const readConfig = (): Effect.Effect<Config, DaemonError> =>
   }).pipe(
     Effect.catchAll((error) =>
       isErrnoException(error.error) && error.error.code === "ENOENT"
-        ? Effect.succeed(JSON.stringify(defaultConfig))
+        ? Effect.succeed(defaultConfigFromEnv())
         : Effect.fail(daemonError(`Failed to read config: ${String(error.error)}`)),
     ),
     Effect.flatMap((raw) =>
-      Effect.try({
-        try: () => ConfigSchema.parse(JSON.parse(raw)),
-        catch: (error) => daemonError(`Invalid config: ${String(error)}`),
-      }),
+      typeof raw === "string"
+        ? Effect.try({
+            try: () => ConfigSchema.parse(JSON.parse(raw)),
+            catch: (error) => daemonError(`Invalid config: ${String(error)}`),
+          })
+        : Effect.succeed(raw),
     ),
   );
 
@@ -64,12 +91,30 @@ const makeStatus = (): Effect.Effect<DaemonStatus, DaemonError> =>
   }));
 
 const runSystemAction = (action: "reboot" | "shutdown"): Effect.Effect<void, DaemonError> =>
-  Effect.try({
-    try: () => {
-      const command = action === "reboot" ? "reboot" : "poweroff";
-      Bun.spawn(["systemctl", command]);
-    },
-    catch: (error) => daemonError(`Failed to run system action: ${String(error)}`),
+  Effect.async<void, DaemonError>((resume) => {
+    let resolved = false;
+    const command = action === "reboot" ? "reboot" : "poweroff";
+    const child = spawn("systemctl", [command]);
+
+    child.on("error", (error) => {
+      if (resolved) {
+        return;
+      }
+      resolved = true;
+      resume(Effect.fail(daemonError(`Failed to run system action: ${error.message}`)));
+    });
+
+    child.on("close", (code) => {
+      if (resolved) {
+        return;
+      }
+      resolved = true;
+      if (code === 0) {
+        resume(Effect.succeed(undefined));
+      } else {
+        resume(Effect.fail(daemonError(`System action exited with code ${code ?? "unknown"}`)));
+      }
+    });
   });
 
 const handleRequest = (request: DaemonRequest): Effect.Effect<DaemonResponse, DaemonError> => {
@@ -102,6 +147,7 @@ const removeStaleSocket = (): Effect.Effect<void, DaemonError> =>
 
 const startServer = (): Effect.Effect<void, DaemonError> =>
   Effect.async<void, DaemonError>((resume) => {
+    let resolved = false;
     const server = createServer((socket) => {
       let buffer = "";
 
@@ -127,32 +173,46 @@ const startServer = (): Effect.Effect<void, DaemonError> =>
           ),
         );
 
-        Promise.all(responses).then((results) => {
-          const payload = results
-            .map((response: unknown) => {
-              const parsed = DaemonResponseSchema.safeParse(response);
-              const result = parsed.success
-                ? parsed.data
-                : { type: "error", message: parsed.error.message };
-              return JSON.stringify(result);
-            })
-            .join("\n");
+        Promise.all(responses)
+          .then((results) => {
+            const payload = results
+              .map((response: unknown) => {
+                const parsed = DaemonResponseSchema.safeParse(response);
+                const result = parsed.success
+                  ? parsed.data
+                  : { type: "error", message: parsed.error.message };
+                return JSON.stringify(result);
+              })
+              .join("\n");
 
-          if (payload.length > 0) {
-            socket.write(`${payload}\n`);
-          }
-        });
+            if (payload.length > 0) {
+              socket.write(`${payload}\n`);
+            }
+          })
+          .catch((error) => {
+            const message = error instanceof Error ? error.message : String(error);
+            socket.write(`${JSON.stringify({ type: "error", message })}\n`);
+            socket.end();
+          });
       };
 
       socket.on("data", handleData);
     });
 
     server.listen(socketPath, () => {
+      resolved = true;
       resume(Effect.succeed(undefined));
     });
 
     server.on("error", (error) => {
-      resume(Effect.fail(daemonError(`Daemon server error: ${String(error)}`)));
+      console.error("Daemon server error:", error);
+      if (resolved) {
+        server.close(() => {
+          process.exit(1);
+        });
+      } else {
+        resume(Effect.fail(daemonError(`Daemon server error: ${String(error)}`)));
+      }
     });
   });
 
@@ -162,4 +222,7 @@ const program = Effect.gen(function* () {
   yield* startServer();
 });
 
-Effect.runPromise(program).catch(() => undefined);
+Effect.runPromise(program).catch((error) => {
+  console.error("Daemon failed to start:", error);
+  process.exit(1);
+});

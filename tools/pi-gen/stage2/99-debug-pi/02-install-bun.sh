@@ -1,4 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-curl -fsSL https://bun.sh/install | bash
+INSTALLER=$(mktemp)
+curl -fsSL https://bun.sh/install -o "$INSTALLER"
+bash "$INSTALLER" -s "bun-v1.1.38"
+rm -f "$INSTALLER"

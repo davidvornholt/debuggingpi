@@ -43,8 +43,8 @@
                     </div>
                 </div>
                 <div class="actions">
-                    <button id="reboot" class="ghost">Reboot</button>
-                    <button id="shutdown" class="ghost">Shutdown</button>
+                    <button id="reboot" type="button" class="ghost">Reboot</button>
+                    <button id="shutdown" type="button" class="ghost">Shutdown</button>
                 </div>
             </section>
 
@@ -53,11 +53,11 @@
                 <form id="config-form" class="form">
                     <label>
                         SSID
-                        <input id="ap-ssid" required />
+                        <input id="ap-ssid" required maxlength="32" />
                     </label>
                     <label>
                         Passphrase
-                        <input id="ap-passphrase" type="password" required minlength="8" />
+                        <input id="ap-passphrase" type="password" required minlength="8" maxlength="63" />
                     </label>
                     <label>
                         Country
@@ -65,16 +65,22 @@
                     </label>
                     <label>
                         Subnet
-                        <input id="ap-subnet" required />
+                        <input id="ap-subnet" required
+                            pattern="^(25[0-5]|2[0-4]\\d|1?\\d?\\d)(\\.(25[0-5]|2[0-4]\\d|1?\\d?\\d)){3}\\/(3[0-2]|[12]?\\d)$"
+                            title="Enter a CIDR like 192.168.1.1/24" />
                     </label>
                     <div class="row">
                         <label>
                             DHCP Start
-                            <input id="ap-dhcp-start" required />
+                            <input id="ap-dhcp-start" required
+                                pattern="^(25[0-5]|2[0-4]\\d|1?\\d?\\d)(\\.(25[0-5]|2[0-4]\\d|1?\\d?\\d)){3}$"
+                                title="Enter a valid IPv4 address" />
                         </label>
                         <label>
                             DHCP End
-                            <input id="ap-dhcp-end" required />
+                            <input id="ap-dhcp-end" required
+                                pattern="^(25[0-5]|2[0-4]\\d|1?\\d?\\d)(\\.(25[0-5]|2[0-4]\\d|1?\\d?\\d)){3}$"
+                                title="Enter a valid IPv4 address" />
                         </label>
                     </div>
                     <label class="toggle">
@@ -83,7 +89,9 @@
                     </label>
                     <label>
                         USB Address
-                        <input id="usb-address" required />
+                        <input id="usb-address" required
+                            pattern="^(25[0-5]|2[0-4]\\d|1?\\d?\\d)(\\.(25[0-5]|2[0-4]\\d|1?\\d?\\d)){3}\\/(3[0-2]|[12]?\\d)$"
+                            title="Enter a CIDR like 10.55.0.1/24" />
                     </label>
                     <button type="submit" class="primary">Save Config</button>
                     <p class="hint" id="config-status">Waiting for updates...</p>
@@ -95,7 +103,7 @@
                     <h2>Live Logs</h2>
                     <button id="clear-logs" class="ghost">Clear</button>
                 </div>
-                <pre id="log-output">Connecting to journal...</pre>
+                <pre class="log-output" role="log" aria-live="polite" tabindex="0">Connecting to journal...</pre>
             </section>
         </main>
     </div>
