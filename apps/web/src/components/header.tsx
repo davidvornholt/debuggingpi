@@ -7,6 +7,7 @@ export const Header = ({ connected }: HeaderProps): React.ReactElement => (
 		<div className="flex items-center gap-3">
 			<div className="flex items-center gap-2">
 				<svg viewBox="0 0 32 32" className="h-8 w-8" fill="none">
+					<title>Debugging Pi logo</title>
 					<rect width="32" height="32" rx="6" fill="#0d1117" />
 					<circle cx="16" cy="14" r="8" stroke="#2d9f48" strokeWidth="2" />
 					<path

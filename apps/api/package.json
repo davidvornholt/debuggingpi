@@ -7,9 +7,10 @@
 		"dev": "bun run --hot src/index.ts",
 		"build": "bun build src/index.ts --outdir dist --target bun --minify",
 		"start": "bun run dist/index.js",
-		"check": "tsc --noEmit",
+		"check-types": "tsc --noEmit",
 		"clean": "rm -rf dist",
-		"lint": "biome check src/"
+		"lint": "biome check --error-on-warnings .",
+		"lint:fix": "biome check --error-on-warnings . --write"
 	},
 	"dependencies": {
 		"@debuggingpi/shared": "workspace:*",

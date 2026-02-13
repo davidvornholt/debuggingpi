@@ -19,7 +19,10 @@ const LEVEL_COLORS: Record<string, string> = {
 	debug: "text-gray-400 bg-gray-400/10",
 };
 
-const SOURCE_BADGE: Record<string, { readonly label: string; readonly className: string }> = {
+const SOURCE_BADGE: Record<
+	LogEntry["source"],
+	{ readonly label: string; readonly className: string }
+> = {
 	pi3: { label: "Pi 3", className: "bg-pi-green/20 text-pi-green" },
 	"pi-zero": { label: "Pi Zero", className: "bg-purple-500/20 text-purple-400" },
 };
@@ -37,7 +40,7 @@ const formatTimestamp = (isoTimestamp: string): string => {
 
 const LogRow = ({ entry }: { readonly entry: LogEntry }): React.ReactElement => {
 	const levelColor = LEVEL_COLORS[entry.level] ?? "text-gray-400";
-	const source = SOURCE_BADGE[entry.source] ?? SOURCE_BADGE["pi3"]!;
+	const source = SOURCE_BADGE[entry.source];
 
 	return (
 		<div className="group flex items-start gap-2 border-b border-pi-border/30 px-4 py-1 font-mono text-xs hover:bg-pi-surface/50">
@@ -68,10 +71,10 @@ export const LogViewer = ({
 	const autoScrollRef = useRef(true);
 
 	useEffect(() => {
-		if (autoScrollRef.current && !paused && scrollRef.current) {
+		if (entries.length > 0 && autoScrollRef.current && !paused && scrollRef.current) {
 			scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
 		}
-	}, [entries, paused]);
+	}, [entries.length, paused]);
 
 	const handleScroll = (): void => {
 		if (!scrollRef.current) return;

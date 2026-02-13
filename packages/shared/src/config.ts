@@ -15,14 +15,14 @@ export type AppConfig = z.infer<typeof AppConfig>;
 
 export const loadConfig = (): AppConfig =>
 	AppConfig.parse({
-		port: Number(process.env["DEBUGGINGPI_PORT"]) || undefined,
-		host: process.env["DEBUGGINGPI_HOST"] || undefined,
-		logBufferSize: Number(process.env["DEBUGGINGPI_LOG_BUFFER_SIZE"]) || undefined,
-		piZeroHost: process.env["DEBUGGINGPI_PI_ZERO_HOST"] || undefined,
-		piZeroUser: process.env["DEBUGGINGPI_PI_ZERO_USER"] || undefined,
-		sshKeyPath: process.env["DEBUGGINGPI_SSH_KEY_PATH"] || undefined,
-		sshEnabled: process.env["DEBUGGINGPI_SSH_ENABLED"] !== "false",
+		port: Number(process.env.DEBUGGINGPI_PORT) || undefined,
+		host: process.env.DEBUGGINGPI_HOST || undefined,
+		logBufferSize: Number(process.env.DEBUGGINGPI_LOG_BUFFER_SIZE) || undefined,
+		piZeroHost: process.env.DEBUGGINGPI_PI_ZERO_HOST || undefined,
+		piZeroUser: process.env.DEBUGGINGPI_PI_ZERO_USER || undefined,
+		sshKeyPath: process.env.DEBUGGINGPI_SSH_KEY_PATH || undefined,
+		sshEnabled: process.env.DEBUGGINGPI_SSH_ENABLED !== "false",
 		journalFollowUnits:
-			process.env["DEBUGGINGPI_JOURNAL_UNITS"]?.split(",").filter(Boolean) || undefined,
-		pollIntervalMs: Number(process.env["DEBUGGINGPI_POLL_INTERVAL_MS"]) || undefined,
+			process.env.DEBUGGINGPI_JOURNAL_UNITS?.split(",").filter(Boolean) || undefined,
+		pollIntervalMs: Number(process.env.DEBUGGINGPI_POLL_INTERVAL_MS) || undefined,
 	});

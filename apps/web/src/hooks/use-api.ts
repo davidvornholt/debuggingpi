@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 export const useApi = <T>(
 	url: string,
-	intervalMs: number = 5000,
+	intervalMs = 5000,
 ): {
 	readonly data: T | undefined;
 	readonly error: string | undefined;

@@ -13,8 +13,10 @@
 	},
 	"scripts": {
 		"build": "tsc",
-		"check": "tsc --noEmit",
-		"clean": "rm -rf dist"
+		"check-types": "tsc --noEmit",
+		"clean": "rm -rf dist",
+		"lint": "biome check --error-on-warnings .",
+		"lint:fix": "biome check --error-on-warnings . --write"
 	},
 	"dependencies": {
 		"zod": "^3.24.0"

@@ -7,9 +7,10 @@
 		"dev": "vite",
 		"build": "tsc -b && vite build",
 		"preview": "vite preview",
-		"check": "tsc --noEmit",
+		"check-types": "tsc --noEmit",
 		"clean": "rm -rf dist",
-		"lint": "biome check src/"
+		"lint": "biome check --error-on-warnings .",
+		"lint:fix": "biome check --error-on-warnings . --write"
 	},
 	"dependencies": {
 		"@debuggingpi/shared": "workspace:*",

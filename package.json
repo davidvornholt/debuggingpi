@@ -7,8 +7,8 @@
 		"build": "turbo run build",
 		"dev": "turbo run dev",
 		"lint": "turbo run lint",
-		"check": "turbo run check",
-		"format": "biome format --write .",
+		"lint:fix": "turbo run lint:fix",
+		"check-types": "turbo run check-types",
 		"clean": "turbo run clean && rm -rf node_modules"
 	},
 	"devDependencies": {
