@@ -237,29 +237,29 @@ configure_pigen() {
     # Ensure Stage 2 produces an image (Lite baseline)
     touch "$PIGEN_DIR/stage2/SKIP_IMAGES"
 
-    # Link our custom stage into pi-gen
-    if [[ -L "$PIGEN_DIR/stage-debuggingpi" ]]; then
-        rm "$PIGEN_DIR/stage-debuggingpi"
-    fi
-    ln -sf "$STAGE_DIR" "$PIGEN_DIR/stage-debuggingpi"
+    # Copy our custom stage into pi-gen (symlinks break inside Docker)
+    local pigen_stage="$PIGEN_DIR/stage-debuggingpi"
+    rm -rf "$pigen_stage"
+    cp -r "$STAGE_DIR" "$pigen_stage"
 
     # Ensure the custom stage exports an image
-    touch "$STAGE_DIR/EXPORT_IMAGE"
-    rm -f "$STAGE_DIR/SKIP" 2>/dev/null || true
+    touch "$pigen_stage/EXPORT_IMAGE"
+    rm -f "$pigen_stage/SKIP" 2>/dev/null || true
 
     # Copy the app bundle into the stage files directory
-    local stage_app_dir="$STAGE_DIR/01-install-app/files/debuggingpi"
+    local stage_app_dir="$pigen_stage/01-install-app/files/debuggingpi"
     rm -rf "$stage_app_dir"
+    mkdir -p "$(dirname "$stage_app_dir")"
     cp -r "$APP_BUNDLE_DIR" "$stage_app_dir"
 
     # Copy system config files
-    local stage_net_dir="$STAGE_DIR/02-configure-network/files"
+    local stage_net_dir="$pigen_stage/02-configure-network/files"
     mkdir -p "$stage_net_dir"
     cp "$PROJECT_ROOT/system/networkmanager/debuggingpi-ap.nmconnection" "$stage_net_dir/"
     cp "$PROJECT_ROOT/system/networkmanager/usb-zero.nmconnection" "$stage_net_dir/"
     cp "$PROJECT_ROOT/system/sysctl/debuggingpi-forwarding.conf" "$stage_net_dir/"
 
-    local stage_svc_dir="$STAGE_DIR/03-configure-services/files"
+    local stage_svc_dir="$pigen_stage/03-configure-services/files"
     mkdir -p "$stage_svc_dir"
     cp "$PROJECT_ROOT/system/systemd/"*.service "$stage_svc_dir/"
 
@@ -274,8 +274,20 @@ build_image() {
 
     cd "$PIGEN_DIR"
 
-    # Run the Docker build
-    PRESERVE_CONTAINER=1 ./build-docker.sh
+    # If a previous container exists, continue from it (preserves cache).
+    # On a --clean build the container was already removed.
+    local continue_flag=0
+    if docker container inspect pigen_work &>/dev/null; then
+        if [[ "$CLEAN" == "true" ]]; then
+            log_info "Removing stale pi-gen container..."
+            docker rm -v pigen_work >/dev/null
+        else
+            log_info "Resuming from existing pi-gen container..."
+            continue_flag=1
+        fi
+    fi
+
+    PRESERVE_CONTAINER=1 CONTINUE=$continue_flag ./build-docker.sh
 
     log_success "Image build complete"
 }

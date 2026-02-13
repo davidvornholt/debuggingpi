@@ -1,0 +1,207 @@
+# Debugging Pi — Image Build Workflow
+#
+# Builds a flashable Raspberry Pi OS image with the DebuggingPi application
+# pre-installed. Runs natively on arm64 to avoid QEMU emulation overhead.
+#
+# Triggers:
+#   - Push a tag matching v* (e.g. v1.0.0) → builds and creates a GitHub Release
+#   - Manual dispatch from the Actions tab
+
+name: Build Image
+
+on:
+    push:
+        tags:
+            - "v*"
+    workflow_dispatch:
+        inputs:
+            clean:
+                description: "Clean build (remove cached pi-gen state)"
+                required: false
+                default: false
+                type: boolean
+
+# Only allow one image build at a time to avoid resource contention
+concurrency:
+    group: image-build
+    cancel-in-progress: false
+
+permissions:
+    contents: write
+
+jobs:
+    build-app:
+        name: Build Application
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Install Bun
+              uses: oven-sh/setup-bun@v2
+              with:
+                  bun-version: latest
+
+            - name: Install dependencies
+              run: bun install --frozen-lockfile
+
+            - name: Lint & type-check
+              run: bun run check
+
+            - name: Build all packages
+              run: bun run build
+
+            - name: Prepare app bundle
+              run: |
+                  BUNDLE_DIR="$(pwd)/app-bundle"
+                  mkdir -p "$BUNDLE_DIR/apps/api" \
+                           "$BUNDLE_DIR/apps/web" \
+                           "$BUNDLE_DIR/packages/shared"
+
+                  # API
+                  cp -r apps/api/src "$BUNDLE_DIR/apps/api/"
+                  cp apps/api/package.json apps/api/tsconfig.json "$BUNDLE_DIR/apps/api/"
+
+                  # Web (pre-built static assets)
+                  cp -r apps/web/dist "$BUNDLE_DIR/apps/web/"
+
+                  # Shared package
+                  cp -r packages/shared/src "$BUNDLE_DIR/packages/shared/"
+                  cp packages/shared/package.json packages/shared/tsconfig.json "$BUNDLE_DIR/packages/shared/"
+                  if [[ -d packages/shared/dist ]]; then
+                    cp -r packages/shared/dist "$BUNDLE_DIR/packages/shared/"
+                  fi
+
+                  # Root workspace files
+                  cp package.json tsconfig.json "$BUNDLE_DIR/"
+
+            - name: Upload app bundle
+              uses: actions/upload-artifact@v4
+              with:
+                  name: app-bundle
+                  path: app-bundle/
+                  retention-days: 1
+
+    build-image:
+        name: Build Pi Image (arm64)
+        needs: build-app
+        runs-on: ubuntu-24.04-arm
+        timeout-minutes: 90
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Download app bundle
+              uses: actions/download-artifact@v4
+              with:
+                  name: app-bundle
+                  path: tools/image-builder/build/app-bundle
+
+            - name: Clone pi-gen
+              run: |
+                  git clone --branch arm64 --depth 1 \
+                    https://github.com/RPi-Distro/pi-gen.git \
+                    tools/image-builder/build/pi-gen
+
+            - name: Configure pi-gen
+              run: |
+                  PIGEN_DIR="tools/image-builder/build/pi-gen"
+                  STAGE_DIR="tools/image-builder/stage-debuggingpi"
+                  APP_BUNDLE_DIR="tools/image-builder/build/app-bundle"
+
+                  # Copy config
+                  cp tools/image-builder/config "$PIGEN_DIR/config"
+
+                  # Skip desktop stages
+                  touch "$PIGEN_DIR/stage3/SKIP" "$PIGEN_DIR/stage3/SKIP_IMAGES"
+                  touch "$PIGEN_DIR/stage4/SKIP" "$PIGEN_DIR/stage4/SKIP_IMAGES"
+                  touch "$PIGEN_DIR/stage5/SKIP" "$PIGEN_DIR/stage5/SKIP_IMAGES"
+                  touch "$PIGEN_DIR/stage2/SKIP_IMAGES"
+
+                  # Copy custom stage into pi-gen (symlinks break inside Docker)
+                  cp -r "$STAGE_DIR" "$PIGEN_DIR/stage-debuggingpi"
+                  PIGEN_STAGE="$PIGEN_DIR/stage-debuggingpi"
+                  touch "$PIGEN_STAGE/EXPORT_IMAGE"
+                  rm -f "$PIGEN_STAGE/SKIP" 2>/dev/null || true
+
+                  # Copy app bundle into stage files
+                  mkdir -p "$PIGEN_STAGE/01-install-app/files"
+                  cp -r "$APP_BUNDLE_DIR" "$PIGEN_STAGE/01-install-app/files/debuggingpi"
+
+                  # Copy system config files
+                  mkdir -p "$PIGEN_STAGE/02-configure-network/files"
+                  cp system/networkmanager/debuggingpi-ap.nmconnection "$PIGEN_STAGE/02-configure-network/files/"
+                  cp system/networkmanager/usb-zero.nmconnection "$PIGEN_STAGE/02-configure-network/files/"
+                  cp system/sysctl/debuggingpi-forwarding.conf "$PIGEN_STAGE/02-configure-network/files/"
+
+                  mkdir -p "$PIGEN_STAGE/03-configure-services/files"
+                  cp system/systemd/*.service "$PIGEN_STAGE/03-configure-services/files/"
+
+            - name: Build image with pi-gen
+              run: |
+                  cd tools/image-builder/build/pi-gen
+                  PRESERVE_CONTAINER=1 ./build-docker.sh
+
+            - name: Collect image artifacts
+              id: collect
+              run: |
+                  mkdir -p tools/image-builder/deploy
+                  for img in tools/image-builder/build/pi-gen/deploy/*.img*; do
+                    if [[ -f "$img" ]]; then
+                      cp "$img" "tools/image-builder/deploy/"
+                    fi
+                  done
+
+                  # Generate build info
+                  cat > tools/image-builder/deploy/build-info.txt <<EOF
+                  Debugging Pi Image Build
+                  ========================
+                  Date: $(date -u '+%Y-%m-%d %H:%M:%S UTC')
+                  Git commit: $(git rev-parse --short HEAD)
+                  Git ref: ${{ github.ref_name }}
+                  Runner: ${{ runner.arch }}
+
+                  Network Configuration:
+                    WiFi SSID: DebuggingPi
+                    WiFi Password: debuggingpi
+                    AP IP: 10.42.0.1
+                    USB subnet: 192.168.7.0/24
+                    Pi Zero IP: 192.168.7.2
+                    Dashboard: http://10.42.0.1:8080
+
+                  Default credentials:
+                    User: pi
+                    Password: debuggingpi
+                    SSH: enabled
+                  EOF
+
+                  # Set output for release step
+                  echo "image_dir=tools/image-builder/deploy" >> "$GITHUB_OUTPUT"
+
+            - name: Upload image artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: debuggingpi-image
+                  path: tools/image-builder/deploy/
+                  retention-days: 14
+
+            - name: Create GitHub Release
+              if: startsWith(github.ref, 'refs/tags/v')
+              uses: softprops/action-gh-release@v2
+              with:
+                  files: tools/image-builder/deploy/*
+                  generate_release_notes: true
+                  body: |
+                      ## DebuggingPi ${{ github.ref_name }}
+
+                      Flash the `.img.xz` file to a microSD card:
+
+                      ```bash
+                      # Decompress and flash (Linux/macOS)
+                      xz -dk DebuggingPi-lite.img.xz
+                      sudo dd if=DebuggingPi-lite.img of=/dev/sdX bs=4M status=progress conv=fsync
+                      ```
+
+                      Or use [Raspberry Pi Imager](https://www.raspberrypi.com/software/) with the `.img.xz` file directly.
+
+                      **First boot:** Connect to WiFi `DebuggingPi` (password: `debuggingpi`), then open `http://10.42.0.1:8080`.
