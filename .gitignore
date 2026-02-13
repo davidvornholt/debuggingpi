@@ -16,6 +16,3 @@ tools/image-builder/stage-debuggingpi/03-configure-services/files/*.service
 *.img
 *.img.xz
 *.img.gz
-
-# Bun
-bun.lock
