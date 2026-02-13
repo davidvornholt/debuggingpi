@@ -301,11 +301,12 @@ collect_output() {
     mkdir -p "$DEPLOY_DIR"
 
     local image_found=false
-    for img in "$PIGEN_DIR/deploy/"*.img*; do
-        if [[ -f "$img" ]]; then
+    local artifact
+    for artifact in "$PIGEN_DIR/deploy/"*.img* "$PIGEN_DIR/deploy/"*.zip; do
+        if [[ -f "$artifact" ]]; then
             local filename
-            filename=$(basename "$img")
-            cp "$img" "$DEPLOY_DIR/$filename"
+            filename=$(basename "$artifact")
+            cp "$artifact" "$DEPLOY_DIR/$filename"
             log_success "Image: $DEPLOY_DIR/$filename"
             image_found=true
         fi

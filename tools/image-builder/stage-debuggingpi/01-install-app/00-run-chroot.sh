@@ -14,12 +14,17 @@ fi
 APP_DIR="/opt/debuggingpi"
 mkdir -p "$APP_DIR"
 
-# Copy application files (placed here by the build script)
-if [[ -d "${ROOTFS_DIR}/tmp/debuggingpi-app" ]]; then
-    cp -r "${ROOTFS_DIR}/tmp/debuggingpi-app/"* "$APP_DIR/"
-else
-    # Files are in the stage files directory
-    cp -r files/debuggingpi/* "$APP_DIR/" 2>/dev/null || true
+# Copy application files staged in pre-chroot step
+if [[ ! -d "/tmp/debuggingpi-app" ]]; then
+    echo "[debuggingpi] ERROR: /tmp/debuggingpi-app not found"
+    exit 1
+fi
+
+cp -a /tmp/debuggingpi-app/. "$APP_DIR/"
+
+if [[ ! -f "$APP_DIR/package.json" ]]; then
+    echo "[debuggingpi] ERROR: package.json missing in $APP_DIR"
+    exit 1
 fi
 
 # Install production dependencies

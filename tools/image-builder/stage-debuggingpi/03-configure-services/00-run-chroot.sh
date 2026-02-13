@@ -4,12 +4,18 @@
 echo "[debuggingpi] Installing systemd services..."
 
 SYSTEMD_DIR="/etc/systemd/system"
+SERVICES_STAGING_DIR="/tmp/debuggingpi-services"
+
+if [[ ! -d "$SERVICES_STAGING_DIR" ]]; then
+	echo "[debuggingpi] ERROR: $SERVICES_STAGING_DIR not found"
+	exit 1
+fi
 
 # Install service files
-install -m 644 files/debuggingpi-ap.service "$SYSTEMD_DIR/"
-install -m 644 files/debuggingpi-usb.service "$SYSTEMD_DIR/"
-install -m 644 files/debuggingpi-routing.service "$SYSTEMD_DIR/"
-install -m 644 files/debuggingpi-api.service "$SYSTEMD_DIR/"
+install -m 644 "$SERVICES_STAGING_DIR/debuggingpi-ap.service" "$SYSTEMD_DIR/"
+install -m 644 "$SERVICES_STAGING_DIR/debuggingpi-usb.service" "$SYSTEMD_DIR/"
+install -m 644 "$SERVICES_STAGING_DIR/debuggingpi-routing.service" "$SYSTEMD_DIR/"
+install -m 644 "$SERVICES_STAGING_DIR/debuggingpi-api.service" "$SYSTEMD_DIR/"
 
 # Create a first-boot service that runs dependency installation
 cat > "$SYSTEMD_DIR/debuggingpi-first-boot.service" << 'EOF'
