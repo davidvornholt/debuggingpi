@@ -4,16 +4,16 @@ A headless debugging hub for the **Raspberry Pi 3 Model A+** that turns it into 
 
 ## Architecture
 
-```
-┌─────────────┐          USB OTG          ┌─────────────────────────┐         WiFi          ┌────────────┐
-│  Pi Zero W  │◄────────────────────────►  │   Pi 3 Model A+         │◄──────────────────►   │   Laptop   │
+```text
+┌─────────────┐          USB OTG           ┌─────────────────────────┐         WiFi          ┌────────────┐
+│  Pi Zero W  │◄──────────────────────────►│   Pi 3 Model A+         │◄─────────────────────►│   Laptop   │
 │             │     192.168.7.2            │   (Debugging Pi)        │    10.42.0.x          │   Phone    │
-│  usb0       │◄──────────────────────────►│   usb0: 192.168.7.1    │                       │   Tablet   │
-│  g_ether    │     Ethernet over USB      │   wlan0: 10.42.0.1     │    SSID: DebuggingPi  │            │
+│  usb0       │◄──────────────────────────►│   usb0: 192.168.7.1     │                       │   Tablet   │
+│  g_ether    │     Ethernet over USB      │   wlan0: 10.42.0.1      │    SSID: DebuggingPi  │            │
 │             │                            │                         │    Pass: debuggingpi  │            │
-│  SSH server │                            │   Hono API   :8080     │                       │ Dashboard  │
-│  Your app   │                            │   React SPA            │                       │ SSH client │
-└─────────────┘                            │   IP forwarding + NAT  │                       └────────────┘
+│  SSH server │                            │   Hono API   :8080      │                       │ Dashboard  │
+│  Your app   │                            │   React SPA             │                       │ SSH client │
+└─────────────┘                            │   IP forwarding + NAT   │                       └────────────┘
                                            └─────────────────────────┘
 ```
 
