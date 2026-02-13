@@ -1,0 +1,21 @@
+dist/
+build/
+out/
+node_modules/
+.turbo
+
+# Image builder artifacts
+tools/image-builder/build/
+tools/image-builder/deploy/
+tools/image-builder/stage-debuggingpi/01-install-app/files/debuggingpi/
+tools/image-builder/stage-debuggingpi/02-configure-network/files/*.nmconnection
+tools/image-builder/stage-debuggingpi/02-configure-network/files/*.conf
+tools/image-builder/stage-debuggingpi/03-configure-services/files/*.service
+
+# OS files
+*.img
+*.img.xz
+*.img.gz
+
+# Bun
+bun.lock

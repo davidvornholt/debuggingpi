@@ -1,0 +1,16 @@
+[Unit]
+Description=Debugging Pi WiFi Access Point
+After=NetworkManager.service
+Requires=NetworkManager.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStartPre=/usr/bin/sleep 2
+ExecStart=/usr/bin/nmcli connection up DebuggingPi-AP
+ExecStop=/usr/bin/nmcli connection down DebuggingPi-AP
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

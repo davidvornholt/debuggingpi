@@ -1,0 +1,31 @@
+# Debugging Pi — pi-gen configuration
+
+# See <https://github.com/RPi-Distro/pi-gen> for all options
+
+IMG_NAME=DebuggingPi
+RELEASE=trixie
+TARGET_HOSTNAME=debuggingpi
+
+# Default user
+
+FIRST_USER_NAME=pi
+FIRST_USER_PASS=debuggingpi
+
+# Enable SSH on first boot
+
+ENABLE_SSH=1
+
+# Locale & keyboard
+
+LOCALE_DEFAULT=en_US.UTF-8
+KEYBOARD_KEYMAP=us
+KEYBOARD_LAYOUT="English (US)"
+TIMEZONE_DEFAULT=UTC
+
+# WiFi regulatory domain
+
+WPA_COUNTRY=US
+
+# Build stages: Lite base + our custom stage
+
+STAGE_LIST="stage0 stage1 stage2 stage-debuggingpi"

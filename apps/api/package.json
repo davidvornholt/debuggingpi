@@ -1,0 +1,23 @@
+{
+	"name": "@debuggingpi/api",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "bun run --hot src/index.ts",
+		"build": "bun build src/index.ts --outdir dist --target bun --minify",
+		"start": "bun run dist/index.js",
+		"check": "tsc --noEmit",
+		"clean": "rm -rf dist",
+		"lint": "biome check src/"
+	},
+	"dependencies": {
+		"@debuggingpi/shared": "workspace:*",
+		"hono": "^4.7.0",
+		"zod": "^3.24.0"
+	},
+	"devDependencies": {
+		"@types/bun": "^1.2.0",
+		"typescript": "^5.7.0"
+	}
+}

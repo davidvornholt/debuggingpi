@@ -1,0 +1,41 @@
+[Unit]
+Description=Debugging Pi Web Dashboard & API
+After=network-online.target debuggingpi-ap.service
+Wants=network-online.target debuggingpi-ap.service debuggingpi-usb.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/debuggingpi/apps/api
+ExecStart=/usr/local/bin/bun run src/index.ts
+Restart=always
+RestartSec=5
+StartLimitIntervalSec=300
+StartLimitBurst=10
+User=debuggingpi
+Group=debuggingpi
+
+# Environment
+Environment=NODE_ENV=production
+Environment=DEBUGGINGPI_PORT=8080
+Environment=DEBUGGINGPI_HOST=0.0.0.0
+Environment=DEBUGGINGPI_SSH_KEY_PATH=/home/debuggingpi/.ssh/id_ed25519
+Environment=DEBUGGINGPI_PI_ZERO_USER=pi
+Environment=DEBUGGINGPI_PI_ZERO_HOST=192.168.7.2
+
+# Security hardening
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/opt/debuggingpi
+PrivateTmp=yes
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=debuggingpi-api
+
+# Watchdog
+WatchdogSec=60
+
+[Install]
+WantedBy=multi-user.target

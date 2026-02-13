@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/components/header.tsx","./src/components/log-search.tsx","./src/components/log-viewer.tsx","./src/components/network-panel.tsx","./src/components/status-panel.tsx","./src/hooks/use-api.ts","./src/hooks/use-log-search.ts","./src/hooks/use-sse.ts"],"version":"5.9.3"}
